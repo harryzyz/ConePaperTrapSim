@@ -1,0 +1,267 @@
+\documentclass[]{elsarticle}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools,bbm,booktabs,array,tikz,pifont,comment,multirow,url,graphicx}
+\input FJHDef.tex
+
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\INT}{INT}
+\DeclareMathOperator{\APP}{APP}
+\DeclareMathOperator{\lin}{lin}
+\DeclareMathOperator{\up}{up}
+\DeclareMathOperator{\lo}{lo}
+\DeclareMathOperator{\fix}{fix}
+\DeclareMathOperator{\err}{err}
+\DeclareMathOperator{\maxcost}{maxcost}
+\DeclareMathOperator{\mincost}{mincost}
+\newcommand{\herr}{\widehat{\err}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\theoremstyle{definition}
+\newtheorem{algo}{Algorithm}
+\newtheorem{condit}{Condition}
+%\newtheorem{assump}{Assumption}
+\theoremstyle{remark}
+\newtheorem{rem}{Remark}
+\newcommand{\Fnorm}[1]{\abs{#1}_{\cf}}
+\newcommand{\Ftnorm}[1]{\abs{#1}_{\tcf}}
+\newcommand{\Gnorm}[1]{\norm[\cg]{#1}}
+\newcommand{\flin}{f_{\text{\rm{lin}}}}
+
+\newcommand{\GAIL}{\hyperlink{GAILlink}{GAIL}\xspace}
+\newcommand{\QMC}{\hyperlink{QMClink}{QMC}\xspace}
+\newcommand{\IIDMC}{\hyperlink{IIDMClink}{IID MC}\xspace}
+\newcommand{\SAMSIQMC}{\hyperlink{SAMSIlink}{SAMSI-QMC}\xspace}
+
+\providecommand{\FJHickernell}{Hickernell}
+%\newcommand{\hf}{\widehat{f}}
+%\newcommand{\hI}{\hat{I}}
+\newcommand{\hatf}{\hat{f}}
+\newcommand{\hatg}{\hat{g}}
+%\newcommand{\tf}{\widetilde{f}}
+\newcommand{\tbf}{\tilde{\bff}}
+%\DeclareMathOperator{\Pr}{\mathbb{P}}
+%\DeclareMathOperator{\cost}{cost}
+%\DeclareMathOperator{\comp}{comp}
+
+\DeclareMathOperator{\loss}{loss}
+\DeclareMathOperator{\lof}{lof}
+\DeclareMathOperator{\reg}{reg}
+\DeclareMathOperator{\CV}{CV}
+\DeclareMathOperator{\size}{wd}
+\DeclareMathOperator{\GP}{\mathcal{G} \! \mathcal{P}}
+
+%\newcommand{\reals}{{\mathbb{R}}}
+%\newcommand{\naturals}{{\mathbb{N}}}
+%\newcommand{\integers}{{\mathbb{Z}}}
+\def\expect{{\mathbb{E}}}
+\def\il{\left<}
+\def\ir{\right>}
+\def\e{\varepsilon}
+\def\g{\gamma}
+\def\l{\lambda}
+\def\b{\beta}
+\def\a{\alpha}
+\def\lall{\Lambda^{{\rm all}}}
+\def\lstd{\Lambda^{{\rm std}}}
+
+%\newcommand{\vf}{\boldsymbol{f}}
+\newcommand{\hV}{\widehat{V}}
+%\newcommand{\tV}{\widetilde{V}}
+%\newcommand{\fu}{\mathfrak{u}}
+\newcommand{\hcut}{\mathfrak{h}}
+\newcommand{\tOmega}{\widetilde{\Omega}}
+\newcommand{\tvarrho}{\widetilde{\varrho}}
+
+%\newcommand{\bbE}{\mathbb{E}}
+%\newcommand{\tQ}{\widetilde{Q}}
+%\newcommand{\mA}{\mathsf{A}}
+%\newcommand{\mB}{\mathsf{B}}
+%\newcommand{\mC}{\mathsf{C}}
+%\newcommand{\mD}{\mathsf{D}}
+%\newcommand{\mG}{\mathsf{G}}
+%\newcommand{\mH}{\mathsf{H}}
+%\newcommand{\mI}{\mathsf{I}}
+%\newcommand{\bbK}{\mathbb{K}}
+%\newcommand{\mK}{\mathsf{K}}
+%\newcommand{\tmK}{\widetilde{\mathsf{K}}}
+%\newcommand{\mL}{\mathsf{L}}
+%\newcommand{\mM}{\mathsf{M}}
+%\newcommand{\mP}{\mathsf{P}}
+%\newcommand{\mQ}{\mathsf{Q}}
+%\newcommand{\mR}{\mathsf{R}}
+%\newcommand{\mX}{\mathsf{X}}
+%\newcommand{\mPhi}{\mathsf{\Phi}}
+%\newcommand{\mPsi}{\mathsf{\Psi}}
+%\newcommand{\mLambda}{\mathsf{\Lambda}}
+%
+%\DeclareMathOperator{\err}{err}
+%\DeclareMathOperator{\oerr}{\overline{\err}}
+%\DeclareMathOperator{\herr}{\widehat{\err}}
+%\DeclareMathOperator{\Ans}{Ans}
+%
+%\DeclareMathOperator{\Var}{Var}
+%\DeclareMathOperator{\INT}{INT}
+%\DeclareMathOperator{\APP}{APP}
+%\DeclareMathOperator{\OPT}{MIN}
+%
+%\newcommand{\bone}{\boldsymbol{1}}
+%\newcommand{\bzero}{\boldsymbol{0}}
+%\newcommand{\binf}{\boldsymbol{\infty}}
+%\newcommand{\ba}{{\boldsymbol{a}}}
+%\newcommand{\bb}{{\boldsymbol{b}}}
+%\newcommand{\bc}{{\boldsymbol{c}}}
+%\newcommand{\bd}{{\boldsymbol{d}}}
+%\newcommand{\be}{{\boldsymbol{e}}}
+%\newcommand{\bff}{{\boldsymbol{f}}}
+%\newcommand{\bhh}{{\boldsymbol{h}}}
+%\newcommand{\beps}{{\boldsymbol{\varepsilon}}}
+%\newcommand{\tbeps}{\tilde{\beps}}
+%\newcommand{\bx}{{\boldsymbol{x}}}
+%\newcommand{\bX}{{\boldsymbol{X}}}
+%\newcommand{\bh}{{\boldsymbol{h}}}
+%\newcommand{\bk}{{\boldsymbol{k}}}
+%\newcommand{\bg}{{\boldsymbol{g}}}
+%\newcommand{\bn}{{\boldsymbol{n}}}
+%\newcommand{\bv}{{\boldsymbol{v}}}
+%\newcommand{\bu}{{\boldsymbol{u}}}
+%\newcommand{\by}{{\boldsymbol{y}}}
+%\newcommand{\bt}{{\boldsymbol{t}}}
+%\newcommand{\bz}{{\boldsymbol{z}}}
+%\newcommand{\bvarphi}{{\boldsymbol{\varphi}}}
+%\newcommand{\bgamma}{{\boldsymbol{\gamma}}}
+%\newcommand{\bphi}{{\boldsymbol{\phi}}}
+%\newcommand{\bpsi}{{\boldsymbol{\psi}}}
+%\newcommand{\bnu}{{\boldsymbol{\nu}}}
+%\newcommand{\balpha}{{\boldsymbol{\alpha}}}
+%\newcommand{\bbeta}{{\boldsymbol{\beta}}}
+%\newcommand{\bo}{{\boldsymbol{\omega}}}  %GF added
+%\newcommand{\newton}[2]{\left(\begin{array}{c} #1\\ #2\end{array}\right)}
+%\newcommand{\anor}[2]{\| #1\|_{\mu_{#2}}}
+%\newcommand{\satop}[2]{\stackrel{\scriptstyle{#1}}{\scriptstyle{#2}}}
+%\newcommand{\setu}{{\mathfrak{u}}}
+%
+%\newcommand{\me}{\textup{e}}
+%\newcommand{\mi}{\textup{i}}
+%\def\d{\textup{d}}
+%\def\dif{\textup{d}}
+%\newcommand{\cc}{\mathcal{C}}
+%\newcommand{\cb}{\mathcal{B}}
+%\newcommand{\cl}{L}
+%\newcommand{\ct}{\mathfrak{T}}
+%\newcommand{\cx}{{\Omega}}
+%\newcommand{\calc}{{\mathcal{C}}}
+%\newcommand{\calf}{{\mathcal{F}}}
+%\newcommand{\calfd}{{\calf_d}}
+%\newcommand{\calh}{{\mathcal{H}}}
+%\newcommand{\tcalh}{{\widetilde{\calh}}}
+%\newcommand{\calI}{{\mathcal{I}}}
+%\newcommand{\calhk}{\calh_d(K)}
+%\newcommand{\calg}{{\mathcal{G}}}
+%\newcommand{\calgd}{{\calg_d}}
+%\newcommand{\cL}{\mathcal{L}}
+%\newcommand{\cP}{\mathcal{P}}
+%\newcommand{\cT}{\mathcal{T}}
+%\newcommand{\cK}{\mathcal{K}}
+%\newcommand{\fA}{\mathfrak{A}}
+%\newcommand{\fC}{\mathfrak{C}}
+%\newcommand{\fF}{\mathfrak{F}}
+%\newcommand{\fL}{\mathfrak{L}}
+%\newcommand{\fU}{\mathfrak{U}}
+%\newcommand{\hS}{\widehat{S}}
+%\DeclareMathOperator{\Prob}{\mathbb{P}}
+%
+%\def\abs#1{\ensuremath{\left \lvert #1 \right \rvert}}
+%\newcommand{\bigabs}[1]{\ensuremath{\bigl \lvert #1 \bigr \rvert}}
+%\newcommand{\norm}[2][{}]{\ensuremath{\left \lVert #2 \right \rVert}_{#1}}
+%\newcommand{\ip}[3][{}]{\ensuremath{\left \langle #2, #3 \right \rangle_{#1}}}
+%\newcommand{\bignorm}[2][{}]{\ensuremath{\bigl \lVert #2 \bigr \rVert}_{#1}}
+%\newcommand{\calm}{{\mathfrak{M}}}
+%\DeclareMathOperator{\diag}{diag}
+%\DeclareMathOperator{\dist}{dist}
+%\DeclareMathOperator{\filldis}{fill}
+%\DeclareMathOperator{\sep}{sep}
+%\DeclareMathOperator{\avg}{avg}
+%\DeclareMathOperator{\vol}{vol}
+%\DeclareMathOperator{\cov}{cov}
+%
+%\newcommand{\des}{\{\bx_i\}}
+%\newcommand{\desinf}{\{\bx_i\}_{i=1}^{\infty}}
+%\newcommand{\desn}{\{\bx_i\}_{i=1}^n}
+%\newcommand{\wts}{\{g_i\}_{i=1}^N}
+%\newcommand{\wtsn}{\{g_i\}_{i=1}^N}
+%\newcommand{\datan}{\{y_i\}_{i=1}^N}
+%
+%%FJH added
+%\newcommand{\Order}{\mathcal{O}}
+%\newcommand{\ch}{\mathcal{H}}
+%\newcommand{\tch}{{\widetilde{\ch}}}
+%\newcommand{\veps}{\boldsymbol{\varepsilon}}
+%\DeclareMathOperator{\best}{best}
+%\newcommand{\hmu}{\hat{\mu}}
+%\newcommand{\hsigma}{\hat{\sigma}}
+%\newcommand{\tK}{\widetilde{K}}
+%\newcommand{\Matlab}{{\sc Matlab}\xspace}
+%\newcommand{\abstol}{\varepsilon_{\text{a}}}
+%\newcommand{\reltol}{\varepsilon_{\text{r}}}
+%
+%\newcommand\starred[1]{\accentset{\star}{#1}}
+
+
+\begin{document}
+  
+  
+\begin{frontmatter}
+
+\title{Reliable Adaptive Numerical Integration}
+\author{Fred J. Hickernell} \ead{hickernell@iit.edu}
+\author{Yizhi Zhang} \ead{yzhang97@hawk.iit.edu}
+\address{IIT Tower 7th Floor, Illinois Institute of Technology,\\ 10 W.\ 35$^{\text{nd}}$ St., Chicago, IL 60616}
+% IIT Tower 7th Floor, 10 W. 35th Street, Illinois Institute of Technology, Chicago, IL 60616, USA
+\begin{abstract}
+Abstract here
+\end{abstract}
+
+\begin{keyword}
+adaptive \sep automatic \sep cones \sep  guarantee \sep integration \sep trapezoidal rule \sep Simpson's rule
+%% keywords here, in the form: keyword \sep keyword
+
+
+\end{keyword}
+\end{frontmatter}
+  
+\section{Introduction}
+Intro here
+
+\section{Definitions}
+Def here
+
+\section{Error Bounds}
+Err Bounds here
+
+\section{Cost of Algo}
+Cost here
+
+\section{Experiment}
+Example here
+
+\section{Future Work}
+Discussion Here
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+\end{document}
