@@ -98,7 +98,7 @@
 %\newcommand{\mLambda}{\mathsf{\Lambda}}
 %
 %\DeclareMathOperator{\err}{err}
-%\DeclareMathOperator{\oerr}{\overline{\err}}
+\DeclareMathOperator{\oerr}{\overline{\err}}
 %\DeclareMathOperator{\herr}{\widehat{\err}}
 %\DeclareMathOperator{\Ans}{Ans}
 %
@@ -153,7 +153,7 @@
 %\newcommand{\ct}{\mathfrak{T}}
 %\newcommand{\cx}{{\Omega}}
 %\newcommand{\calc}{{\mathcal{C}}}
-%\newcommand{\calf}{{\mathcal{F}}}
+\newcommand{\calf}{{\mathcal{F}}}
 %\newcommand{\calfd}{{\calf_d}}
 %\newcommand{\calh}{{\mathcal{H}}}
 %\newcommand{\tcalh}{{\widetilde{\calh}}}
@@ -211,8 +211,8 @@
 
 
 \begin{document}
-  
-  
+
+
 \begin{frontmatter}
 
 \title{Reliable Adaptive Numerical Integration}
@@ -231,37 +231,472 @@ adaptive \sep automatic \sep cones \sep  guarantee \sep integration \sep trapezo
 
 \end{keyword}
 \end{frontmatter}
-  
+
 \section{Introduction}
-Intro here
 
-\section{Definitions}
-Def here
+Integrations are the nuts and bolts when solving practical problems in a variety of areas. While some integration problems have analytical solutions and can be solved with pencil and paper, a vast majority of those problems must be solved numerically via algorithms. In practice, users want to expand the right amount of computational effort to achieve an answer meeting the error criterion, but not much more. This requirement calls the algorithms to be adaptive. The users also want the algorithm to be a black-box one which only requires the input function $f$ and the error tolerance, not anything else. This requirement calls the algorithm to have a stopping criterion based on data-driven error bounds, $\herr(f)$. 
 
-\section{Error Bounds}
-Err Bounds here
+Many numerical integration algorithms are adaptive such as ... Unfortunately, common adaptive algorithms are based on heuristic error bounds and not guaranteed. They sometimes fail, and fail for unknown reasons. in traditional error analysis, numerical algorithms follows rigorous error bounds, $\oerr(f)$. However, $\oerr(f)$ usually involves norms of the input function, $\norm[\calf]{f}$, which is typically unknown a priori. Therefore, traditional error bounds are insufficient to provide rigorous stopping criterions for numerical algorithms.
 
-\section{Cost of Algo}
-Cost here
+Taking the trapezoidal rule as an example. Let the interval of the integral, $(a,b)$, equals to $(0,1)$. According to \cite[Sect.\ 7.2, (7.15)]{BraPet11a}:
+\begin{gather}
+\label{traprule}
+\int_0^1 f(x) \, \dif x \approx T_n(f):= \frac1{2n} \left[f(0) + 2f(1/n) + \cdots + 2f(1-1/n) + f(1) \right ], \\
+\label{traperrbd}
+\err_n(f) := \abs{\int_0^1 f(x) \, \dif x - T_n(f)}  \le \frac{\Var(f')}{8 n^2} =: \oerr_n(f),
+\end{gather}
+where the total variation is defined as
+\begin{equation*}
+\Var(f') : = \sup \left \{\widehat{V}(f,\{x_i\}_{i=0}^n) := \sum_{i=2}^{n-1}  \abs{f(x_i) - f(x_{i-1})} \, \Big
+\vert \,
+\forall \text{ partitions }  \{x_i\}_{i=0}^n \text{ of } [a,b], \ \forall n \in \naturals \right \}.
+\end{equation*}
+A partition of an interval is an ordered subset including both endpoints. The user wants to determine how large $n$ should be in order to make  $\err_n(f)  \le \varepsilon$ for a prescribed
+absolute error tolerance $\varepsilon$. This condition is sufficient but requires an upper bound in terms of $\Var(f')$, which is normally unknown to the user.
 
-\section{Experiment}
-Example here
+
+
+%\section{Definitions}
+%\subsection{Problems and Algorithms} The function integration to be solved is defined by a solution operator
+%$$
+%S:\cf \to \cg = \int_{\cx} f(\vx) \, w(\vx) \, \dif \vx, \quad w \text{ is fixed,}
+%$$.
+%The space $\cf$ is a linear space of input functions defined on $\cx$ with semi-norm $|\cdot|_{\cf}$. The space $\cg$ is a linear space of outputs with norm $\|\cdot\|_{\cg}$.
+%The solution operator is assumed to be positively homogeneous, i.e.,
+%\[
+%S(cf) = cS(f) \qquad \forall c\ge 0.
+%\]
+%
+%Given a reasonable subset of input functions, $\cn \subseteq \cf$, an automatic algorithm $A:\cn\times(0,\infty) \to \cg$ takes as inputs a function, $f$, and an error tolerance, $\varepsilon$.  Our goal is to find an $A$ for which $\norm[\cg]{S(f)-A(f,\varepsilon)}\le \varepsilon$.  Algorithm \ref{nonadaptalgo} is one non-adaptive example that is successful for functions in balls, i.e., $\cn=\cb_{\sigma}$.
+%
+%Following \cite[Section 3.2]{TraWasWoz88}, the algorithm takes the form of some function of data derived from the input function:
+%\begin{equation*}
+%\label{algoform}
+%A(f,\varepsilon) =  \phi(\vL(f)), \quad \vL(f) = \left(L_1(f), \ldots, L_m(f)\right) \qquad \forall f \in \cf.
+%\end{equation*}
+%Here the $L_i \in \Lambda$ are real-valued homogeneous functions defined on $\cf$:
+%\begin{equation*}
+%\label{dataassump}
+%L(cf) = cL(f) \qquad \forall f \in \cf, \ c \in \reals, \ L \in \Lambda.
+%\end{equation*}
+%One popular choice for $\Lambda$ is the set of all function values, $\Lambda^{\std}$, i.e., $L_i(f) = f(\vx_i)$ for some $\vx_i \in \cx$.  Another common choice is the set of all bounded linear functionals, $\Lambda^{\lin}$.  In general, $m$ may depend on  $\varepsilon$ and the $L_i(f)$, and each $L_i$ may depend on $L_1(f), \ldots, L_{i-1}(f)$.  The set of all such algorithms is denoted by $\ca(\cn,\cg,S,\Lambda)$. For example, Algorithm \ref{nonadaptalgo} lies in $\ca(\cb_{\sigma},\cg,S,\Lambda)$.  In this article, all algorithms are assumed to be deterministic.  There is no randomness.
+%
+%\subsection{Costs of Algorithms} \label{AlgoCostsec}
+%
+%The cost of a possibly adaptive algorithm, $A$, depends on the function and the error tolerance:
+%\[
+%\cost(A,f,\varepsilon) = \$(\vL) = \$(L_1) + \cdots +\$(L_m) \in \natzero,
+%\]
+%where $\$:\Lambda \to \naturals$, and $\$(L)$ is the cost of acquiring the datum $L(f)$. The cost of $L$ may be the same for all $L \in \Lambda$, e.g, $\$(L)=1$.  Alternatively, the cost might vary with the choice of $L$.  For example, if $f$ is a function of the infinite sequence of real numbers, $(x_1, x_2, \ldots)$, the cost of evaluating the function with arbitrary values of the first $d$ coordinates, $L(f)=f(x_1, \ldots, x_d, 0, 0, \ldots)$, might be $d$.  This cost model has been used by for integration problems \cite{HicMGRitNiu09a,KuoEtal10a,NiuHic09a,NiuHic09b,PlaWas11a} and function approximation problems \cite{Was13a,WasWoz11a,WasWoz11b}.  If an algorithm does not require any function data, then its cost is zero.
+%
+%Although the cost of an adaptive algorithm varies with $f$, we hope that it does not vary wildly for different input functions with the same $\cf$-semi-norm. We define the \emph{maximum} and \emph{minimum} costs of the algorithm $A\in \ca(\cn,\cg,S,\Lambda)$ relative to $\cb_{s}$, the $\cf$-semi-norm ball, as follows:
+%\begin{gather*}
+%\maxcost(A,\cn,\varepsilon,\cb_s)
+%= \sup \{ \cost(A,f,\varepsilon) : f \in \cn \cap \cb_{s} \}, \\ \mincost(A,\cn,\varepsilon,\cb_s)
+%= \inf \biggl \{ \cost(A,f,\varepsilon) : f \in \cn\setminus \bigcup_{0 \le s'<s}\cb_{s'} \biggr \} .
+%\end{gather*}
+%Note that $A$ knows that $f \in \cn$, but $A$ does not know $\Fnorm{f}$ (unless $\inf_{f \in \cn} \Fnorm{f}=\sup_{f \in \cn} \Fnorm{f}$).  An algorithm is said to have \emph{$\cb_{s}$-stable computational cost} if
+%\begin{equation*}\label{coststabledef}
+%\sup_{\varepsilon, s > 0} \frac{\maxcost(A,\cn,\varepsilon,\cb_s)}{\max(1,\mincost(A,\cn,\varepsilon, \cb_s))} < \infty.
+%\end{equation*}
+%An analogous definition of the stability of computational cost can be made in terms of $\tcf$-semi-norm balls.
+%
+%The complexity of a problem is defined as the maximum cost of the cheapest algorithm that always satisfies the error tolerance:
+%\begin{multline*}
+%\comp(\varepsilon,\ca(\cn,\cg,S,\Lambda),\cb_s) \\
+% = \inf\left\{\maxcost(A,\cn,\varepsilon,\cb_s) : A \in \ca(\cn,\cg,S,\Lambda), \right. \\
+% \left . \norm[\cg]{S(f)-A(f,\varepsilon)} \le \varepsilon \ \ \forall f \in \cn, \ \varepsilon \ge 0 \right \} \in \natzero.
+%\end{multline*}
+%Here the infimum of an empty set is defined to be $\infty$.
+%
+%Algorithm $\text{ref nonadaptalgo}$ is defined for input functions lying in the ball $\cb_{\sigma}$.  It is not adaptive, and its cost depends only on $\varepsilon/\sigma$, but not on the particulars of $f$:
+%\begin{multline} \label{nonadaptalgocost}
+%\maxcost(A,\cb_{\sigma},\varepsilon,\cb_{s}) = \mincost(A,\cb_{\sigma},\varepsilon,\cb_{s}) \\
+%= \cost(A,f,\varepsilon) = h^{-1}(\varepsilon/\sigma) \qquad 0 < s \le \sigma.
+%\end{multline}
+%
+%
+%\section{Error Bounds}
+%In this chapter, we derive upper bounds on the approximation errors in terms of function values. By %\eqref{errorbound}
+%$\text{error bound equationin}$ Chapter 2, the approximation errors of the trapezoidal rule and Simpson's rule have an upper bound in terms of the total variation of the appropriate derivatives. The definition of the cone suggests a way of bounding $\Var(f^{(p)})$ in terms of $\widehat{V}(f^{(p)},\{x_i\}_{i=0}^{n+1})$. However, our algorithms are based on function values and $\widehat{V}(f^{(p)},\{x_i\}_{i=0}^{n+1})$ is defined in terms of derivative values. Thus finite differences are used to express derivative values in terms of function values.
+%
+%\subsection{The Trapezoidal Rule}
+%
+%Backward finite differences are used to approximate $f'$. Define the width of the subintervals as $h=u_{j+1}-u_{j}=(b-a)/n$ and
+%\begin{align*}
+%  f[u_{j}]&=f(u_{j}), \text{ for } j=0,\cdots, n,\\
+%  f[u_{j},u_{j-1}]&=\frac{f(u_{j})-f(u_{j-1})}{h},\text{ for } j=1, \cdots, n.
+%\end{align*}
+%According to the Mean Value Theorem for finite differences, for all $j=1,2,\cdots,n$, there exists $x_j\in (u_{j-1},u_{j})$ such that
+%\begin{equation*}
+%   f'(x_j)= f[u_{j},u_{j-1}],
+%\end{equation*}
+%for $j = 1, 2, \cdots, n.$ This implies that
+%\begin{equation}\label{fprime}
+%  f'(x_j)=\frac{f(u_{j})-f(u_{j-1})}{h}=\frac{n}{b-a}[f(u_{j})-f(u_{j-1})],
+%\end{equation}
+%for some $x_j\in (u_{j-1},u_{j})$. Let $\{a=x_{0}, x_{1},\ldots,x_{n},x_{n+1}=b\}$ be a partition as was introduced just below \eqref{defvhat}. Note that no matter how the $x_j$'s are located, the largest possible width between two adjacent $x_{i}$'s cannot be larger than the width of two intervals. So
+%\begin{equation}\label{cutoff1}
+%  \text{size}(\{x_j\}_{j=0}^{n+1})\leq 2h=2(b-a)/n<\mathfrak{h}.
+%\end{equation}
+%Since \eqref{defvhat} is true for all partition $\{x_i\}_{i=0}^{n+1}$, it is true for \eqref{fprime} with this particular partition $\{x_j\}_{i=0}^{n+1}$. Thus the approximation $\widetilde{V}_1(f,n)$ to $\widehat{V}(f',\{x_j\}_{i=0}^{n+1})$ using only integrand values is defined as:
+%\begin{align}\label{vtilde1}
+%\nonumber    \widehat{V}(f',\{x_j\}_{j=0}^{n+1})&= \sum_{j=1}^{n-1}\left|f'(x_{j+1})-f'(x_{j})\right|,\\
+%\nonumber    &=\sum_{j=1}^{n-1}\left|\frac{n}{b-a}[f(u_{j+1})-f(u_{j})-f(u_{j})+f(u_{j-1})]\right|\\
+%    &=\frac{n}{b-a}\sum_{j=1}^{n-1}\left|f(u_{j+1})-2f(u_{j})+f(u_{j-1})\right|=:\widetilde{V}_1(f,n).
+%\end{align}
+%
+%Therefore by combining the deduction above together, the error bound on error estimate for our trapezoidal rule algorithm using only function values can be written as follow:
+%\begin{align*}
+%\overline{\text{err}}_{\text{t}}(f,n):=&C(n)\Var(f'),\qquad &\text{ (by \eqref{errorbound})}\\
+%\leq & C(n)\mathfrak{C}(\text{size}(\{x_i\}_{i=0}^{n+1}))\widehat{V}(f',\{x_i\}_{i=0}^{n+1}), \qquad &\text{ (by \eqref{defcone})}\\
+%=& C(n)\mathfrak{C}(\text{size}(\{x_j\}_{i=0}^{n+1}))\widetilde{V}_1(f,n), \qquad &\text{ (by \eqref{vtilde1})}\\
+%  \leq & \frac{(b-a)^2\mathfrak{C}(2(b-a)/n)\widetilde{V}_1(f,n)}{8n^2}.\qquad &\text{ (by \eqref{cutoff1})}
+%\end{align*}
+%
+%Lemma \ref{lemmaerrorboundtrap} gives the upper bound on the estimation error of the composite trapezoidal rule.
+%\begin{lem}\label{lemmaerrorboundtrap}
+%    The approximation error of the composite trapezoidal rule is bounded in terms of the integrand values as follows:
+%    \begin{equation}\label{errortrapcone}
+%      \overline{\textup{err}}_{\textup{t}}(f,n)\leq \frac{(b-a)^2\mathfrak{C}(2(b-a)/n)\widetilde{V}_1(f,n)}{8n^2}, \text{ for all } f \in \cc^1.
+%    \end{equation}
+%\end{lem}
+%
+%This upper bound can be used as the factor of determining whether the output of our trapezoidal rule algorithm meets the error tolerance. Since $\mathfrak{C}(\cdot)$ is a non-decreasing function, $a$, $b$ is fixed, as the value of $n$ increases, $\mathfrak{C}(2(b-a)/n)$ is does not increase. According to the definition of $\Var(f')$ in \eqref{defvar} and the definition of $\widetilde{V}_1(f,n)$ in \eqref{vtilde1}, $\widetilde{V}_1(f,n)$ is always less than the variation of the first derivative of the integrand. With a user provided tolerance $\varepsilon$, as long as $n$ is big enough, the approximation error eventually decreases below $\varepsilon$. Therefore, the error bound \eqref{errortrapcone} of our algorithm using only function values provides guarantees that it succeeds.
+%
+%\subsection{The Simpson's Rule}
+%
+%Similar to the trapezoidal rule, the third order backward finite difference is used to approximate $f'''$. Let $h=v_{j+1}-v_{j}=(b-a)/6n$ be the width of the interval and
+%\begin{align*}
+%  f[v_{j}]&=f(v_{j}), &\text{ for } j=0,\cdots, 6n,\\
+%  f[v_{j},v_{j-1}]&=\frac{f(v_{j})-f(v_{j-1})}{h},&\text{ for } j=1, \cdots, 6n,\\
+%  f[v_{j},v_{j-1},v_{j-2}]&=\frac{f(v_{j})-2f(v_{j-1})+f(v_{j-2})}{2h^2},&\text{ for } j=2, \cdots, 6n,\\
+%  f[v_{j},v_{j-1},v_{j-2},v_{j-3}]&=\frac{f(v_{j})-3f(v_{j-1})+3f(v_{j-2})-f(v_{j-3})}{6h^3}, &\text{ for } j=3, \cdots, 6n.
+%\end{align*}
+%%From \eqref{errorbound} in Chapter 2, we know that the error bound of approximations using Simpson's rule can be bounded by the variation of the third derivatives of the function. We do not have the variation of the third derivatives of the function. In order to find the error bound, we introduced the cone space of integrands so that the approximation error of functions within the space can be bounded by $\widehat{V}(f''',\{x_i\}_{i=0}^{n+1})$. However, we cannot use $\widehat{V}(f''',\{x_i\}_{i=0}^{n+1})$ to approximate $\Var{(f''')}$ because it depends on values of $f'''$, not values of $f$. In this case, we consider the following approximation to $\Var(f''')$ which is closely related to $\widehat{V}(f''',\{x_i\}_{i=0}^{n+1})$:
+%% may be say more
+%% Since $$\frac{216n^3}{(b-a)^3}\left|f(t_{i-3})-3f(t_{i-2})+3f(t_{i-1})-f(t_{i})\right|=f'''(x_{i-1}),???$$ for some $x_{i-1} \in [t_{3i-3},t_{3i}]$,
+%According to Mean Value Theorem for finite differences, for all $j=1,2,\cdots,2n$, there exists $x_j\in (v_{3j-3},v_{3j})$ such that
+%\begin{equation*}
+%    \frac{f'''(x_j)}{6}=f[v_{3j},v_{3j-1},v_{3j-2},v_{3j-3}],
+%\end{equation*}
+%for $j = 1, 2, \cdots, 2n.$ This implies that
+%\begin{multline}\label{ftriprime}
+%  f'''(x_j)=\frac{f(v_{3j})-3f(v_{3j-1})+3f(v_{3j-2})-f(v_{3j-3})}{h^3},\\=\frac{216n^3}{(b-a)^3}[f(v_{3j})-3f(v_{3j-1})+3f(v_{3j-2})-f(v_{3j-3})]
+%\end{multline}
+%for some $x_j\in (v_{3j-3},v_{3j})$. Let $\{a=x_{0}, x_{1},\ldots,x_{n},x_{2n+1}=b\}$ be a partition as was introduced just below \eqref{defvhat}. Note that no matter how the $x_j$'s are located, the largest possible width between two adjacent $x_{i}$'s cannot be larger than the width of six intervals. So
+%\begin{equation}\label{cutoff3}
+%    \text{size}(\{x_j\}_{i=0}^{2n+1})\leq 6h=(b-a)/n<\mathfrak{h}.
+%\end{equation}
+%Since \eqref{defvhat} is true for all partition $\{x_i\}_{i=0}^{2n+1}$, it is true for \eqref{ftriprime} with $\{x_j\}_{i=0}^{2n+1}$. Then the approximation $\widetilde{V}_3(f,n)$ to $\widehat{V}(f''',\{x_i\}_{i=0}^{n+1})$ using only integrand values can be written as follow:
+%\begin{align}\label{vtilde3}
+%    \nonumber    \widehat{V}(f''',\{x_j\}_{j=0}^{n+1})&=\sum_{j=1}^{n-1}\left|f'''(x_{j+1})-f'''(x_{j})\right|,\\
+%    \nonumber    &=\sum_{j=1}^{2n-1}\left|\frac{216n}{(b-a)^3}[(f(v_{3j+3})-3f(v_{3j+2})+3f(v_{3j+1})-f(v_{3j}))\right.\\
+%    \nonumber    &\qquad\left.-(f(v_{3j})-3f(v_{3j-1})+3f(v_{3j-2})-f(v_{3j-3}))]\right|\\
+%    \nonumber    &=\frac{216n^3}{(b-a)^3}\sum_{j=1}^{2n-1}\left|f(v_{3j+3})-3f(v_{3j+2})+3f(v_{3j+1})\right.\\
+%                 &\qquad\left.-2f(v_{3j})+3f(v_{3j-1})-3f(v_{3j-2})+f(v_{3j-3})\right|=:\widetilde{V}_3(f,n).
+%\end{align}
+%%\begin{multline}\label{vtilde3}
+%%   \widetilde{V}_3(f,n)=\frac{216n^3}{(b-a)^3}\sum_{j=1}^{2n-1}\left|f(v_{3j+3})-3f(v_{3j+2})+3f(v_{3j+1})\right.\\\left.-2f(v_{3j})+3f(v_{3j-1})-3f(v_{3j-2})+f(v_{3j-3})\right|.
+%%\end{multline}
+%Therefore by combining the relative equations together, the error bound on error estimate for our Simpson's rule algorithm using only function values is obtained as:
+%\begin{align*}
+%\overline{\text{err}}_{\text{s}}(f,n):=&C(n)\Var(f'''),\qquad &\text{ (by \eqref{errorbound})}\\
+%\leq & C(n)\mathfrak{C}(\text{size}(\{x_i\}_{i=0}^{2n+1}))\widehat{V}(f''',\{x_i\}_{i=0}^{2n+1}), \qquad &\text{ (by \eqref{defcone})}\\
+%=& C(n)\mathfrak{C}(\text{size}(\{x_j\}_{i=0}^{2n+1}))\widetilde{V}_3(f,n), \qquad &\text{ (by \eqref{vtilde3})}\\
+%  \leq & \frac{(b-a)^4\mathfrak{C}((b-a)/n)\widetilde{V}_3(f,n)}{93312n^4}.\qquad &\text{ (by \eqref{cutoff3})}
+%\end{align*}
+%
+%Lemma \ref{lemmaerrorboundsim} describes the upper bound on the estimation error of the Simpson's rule.
+%\begin{lem}\label{lemmaerrorboundsim}
+%    The approximation error of the composite Simpson's rule is bounded in terms of the integrand values as follows:
+%    \begin{equation}\label{errorsimcone}
+%      \overline{\textup{err}}_{\text{s}}(f,n)\leq \frac{(b-a)^4\mathfrak{C}((b-a)/n)\widetilde{V}_3(f,n)}{93312n^4}.
+%    \end{equation}
+%\end{lem}
+%
+%
+%This upper bound can be used for our Simpson's algorithm as the factor of determining whether the output meets the error tolerance. Since $\mathfrak{C}(\cdot)$ is a non-decreasing function, $a$, $b$ is fixed, as the value of $n$ going up, $\mathfrak{C}((b-a)/n)$ is non-increasing. The definition of $\Var(f''')$ in \eqref{defvar} and $\widetilde{V}_3(f,n)$ in \eqref{vtilde3} provides that $\widetilde{V}_3(f,n)$ is always less than the variation of the function's third derivative. With a user provided tolerance $\varepsilon$, as long as $n$ is big enough, the approximation error eventually decreases below $\varepsilon$.  Therefore, this error bound \eqref{errorsimcone} of our algorithm using only function values provides guarantees that it will succeeds.
+%
+%As mentioned earlier, the error bounds \eqref{errortrapcone} and \eqref{errorsimcone} of our trapezoidal rule and Simpson's rule algorithms can be treated as the stopping criterion. In the next chapter, details about the algorithms are introduced. The lower bounds and upper bounds of the computational cost are discussed as well.
+%
+%%If we combine \eqref{vtilde} and \eqref{vtileqftriprime} together, we obtain
+%%\begin{equation}\label{vtileqvhat}
+%%    \widetilde{V}_3(f,n)=\sum_{j=1}^{n-1}\left|f'''(x_{j+1})-f'''(x_{j})\right|=\widehat{V}(f''',\{x_j\}_{j=0}^{n+1}).
+%%\end{equation}
+%%Then we can use $\widetilde{V}_n(f)$ to approximate $\Var(f''')$ by just using function values.
+%%
+%%(Add the formula here.)
+%
+%\section{Cost of Algo}
+%Similar to the trapezoidal algorithm, firstly we provide the necessary condition for the integrand lying in the cone. From $\text{eqref defvar}$, the approximation $\widehat{V}({f'''},\{x_j\}_{j=0}^{n+1})$ is a lower bound on $\Var({f'''})$, i.e. $\widehat{V}({f'''},\{x_j\}_{j=0}^{n+1})\leq \Var({f'''})$ for all $n \ge 6$. From the definition of the cone in \eqref{defcone}, the variation of the third derivative can be bounded by the approximation $\widehat{V}({f'''},\{x_j\}_{j=0}^{n+1})$ times an appropriate inflation factor $\mathfrak{C}(\text{size}(\{x_j\}_{j=0}^{n+1}))$, namely $\Var({f'''})\leq$$\mathfrak{C}(\text{size}(\{x_j\}_{j=0}^{n+1}))\widehat{V}({f'''},\{x_j\}_{j=0}^{n+1})$, for all $n \ge 6$. Following a similar derivation as the trapezoidal rule case, the necessary condition for an integrand being in the cone $\cc^3$ at the $k$th loop is:
+%\begin{equation}\label{necconsim}
+%    \widetilde{V}_3(f,n_k)\leq\mathfrak{C}((b-a)/n)\widetilde{V}_3(f,n_j), \quad \text{ for all } j \leq k.
+%\end{equation}
+%The same mechanism is used if this condition is violated, namely halving the cut-off value $\mathfrak{h}$ is implemented to make the cone more inclusive in the Simpson's rule case.
+%
+%\subsection{The Simpson's rule algorithm}
+%%
+%%
+%%\begin{algo}[Trapezoidal Rule Adaptive Algorithm] \label{multistagetrapalgo}
+%%Let the sequence of algorithms $\{T_n\}_{n\in \mathcal{N}}$, %$ \widehat{V}(f,\{x_i\}_{i=0}^{n+1})$,
+%%and $\widetilde{V}_1(\cdot,\cdot)$ be as described above.
+%%Let $\mathfrak{h}\le (b-a)$. Set $k=0$, $\eta_{0}=\infty$. Let $n_1=\lceil2(b-a)/\mathfrak{h}\rceil$. For any integrand $f$ and error tolerance $\varepsilon$, do the following: %$\eta_{0}=\infty$,
+%%\begin{description}
+%%\item[Step 1. Compute a lower bound on {$\Var(f')$}.] Let $k=k+1$. Compute  $\widetilde{V}_1(f,n_k)$ in \eqref{vtilde1}.% and $T_{n_k}(f)$ in \eqref{traprule}.
+%%
+%%\item[Step 2. Compute an upper bound on {$\Var(f')$}.] Compute
+%%    \begin{align*}
+%%        \eta_{k}=\min\left(\eta_{k-1},\mathfrak{C}(2(b-a)/n_{k})\widetilde{V}_1(f,n_k)\right).
+%%    \end{align*}
+%%%    \begin{align*}
+%%%        \eta_{k}=\min_{j<k}\left(\mathfrak{C}(2(b-a)/n_{j})\widetilde{V}_1(f,n_j)\right).
+%%%    \end{align*}
+%%
+%%\item[Step 3. Check the necessary condition for $f \in \cc^1$.] If $\widetilde{V}_1(f,n_k) \le \eta_{k}$, then go to Step 4.
+%%  Otherwise, set $\mathfrak{h} = \mathfrak{h}/2$.
+%%    \begin{enumerate}[label=(\alph*)]
+%%      \item Let $\mathfrak{J}=\{j=1, \cdots, k: n_{j}\ge 2(b-a)/\mathfrak{h}\}$. If $\mathfrak{J}$ is non-empty, recompute the upper bound on $\Var(f')$, $n_{j}$, for $j \in \mathfrak{J}$ by the following: for $j'=\min\{\mathfrak{J}\}$, $\eta_{n_{j'}}=\mathfrak{C}(2(b-a)/n_{j'})\widetilde{V}_1(f,n_{j'})$, $\eta_{j}=\min\{\eta_{j-1},\mathfrak{C}(2(b-a)/n_{j})\widetilde{V}_1(f,n_{j})\}$, $j=j'+1, \cdots, k$. Then go to the beginning of Step 3.
+%%      \item Otherwise, choose $$n_{k+1}=n_k\times\left\lceil\max\left\{\frac{4(b-a)}{\mathfrak{h}},2\right\}\right\rceil.$$
+%%        Go to Step 1.
+%%    \end{enumerate}
+%%
+%%
+%%\item[Step 4. Check for convergence.] Check whether $n_k$ is large enough to satisfy the error tolerance, i.e.
+%%    \begin{equation*}
+%%        \widetilde{V}_1(f,n_k) \le \frac{8\varepsilon n_k^2}{(b-a)^2\mathfrak{C}(2(b-a)/n_k)}.
+%%    \end{equation*}
+%%
+%%    \begin{enumerate}[label=\alph*)]
+%%      \item If this is true, return $T_{n_k}(f)$ in \eqref{traprule} and terminate the algorithm.
+%%      \item Otherwise, go the Step 5.
+%%    \end{enumerate}
+%%
+%%
+%%\item[Step 5. Increase number of nodes and loop again.] Choose
+%%$$
+%%n_{k+1}=n_k\times\max\left(\left\lceil\frac{(b-a)}{n_{k}}\sqrt{\frac{\widetilde{V}_1(f,n_k)}{8\varepsilon}}\right\rceil,2\right).
+%%$$
+%%Go to Step 1.
+%%\end{description}
+%%\end{algo}
+%Now we provide the guaranteed automatic integration algorithm using the Simpson's rule.
+%\begin{algo} [Simpson's Rule Adaptive Algorithm {\tt integral\_s}] \label{multistageintegalgosimpson}
+%Let the sequence of algorithms $\{S_n\}_{n\in \mathbb{N}}$, %$ \widehat{V}(f,\{x_i\}_{i=0}^{n+1})$,
+%and $\widetilde{V}_3(\cdot,\cdot)$ be as described above.
+%Let $\mathfrak{h}\le (b-a)/6$. Set $k=0$, $n_{k}=1$. For any integrand $f$ and error tolerance $\varepsilon$, do the following: %$\eta_{0}=\infty$,
+%\begin{description}
+%\item[Step 1. (Re)set the upper bound on $\Var(f''')$; increase the number of nodes.] $\quad$ Let $\eta_{k}=\infty$ and $n_{k+1}=n_k\times\left(\left\lfloor(b-a)/\mathfrak{h}n_{k}\right\rfloor+1\right)$.
+%
+%\item[Step 2. Compute the largest lower bound on {$\Var(f''')$}.] Let $k=k+1$. Compute  $\widetilde{V}_3(f,n_k)$ in \text{eqref{vtilde3}}.% and $T_{n_k}(f)$ in \eqref{traprule}.
+%
+%\item[Step 3. Compute the smallest upper bound on {$\Var(f''')$}.] Compute
+%    \begin{align*}
+%        \eta_{k}=\min\left(\eta_{k-1},\mathfrak{C}((b-a)/n_{k})\widetilde{V}_3(f,n_k)\right).
+%    \end{align*}
+%%    \begin{align*}
+%%        \eta_{k}=\min_{j<k}\left(\mathfrak{C}(2(b-a)/n_{j})\widetilde{V}_1(f,n_j)\right).
+%%    \end{align*}
+%
+%\item[Step 4. Check the necessary condition for $f \in \cc^3$.] If $\widetilde{V}_3(f,n_k) \le \eta_{k}$, go to Step 5.
+%  Otherwise, set $\mathfrak{h} = \mathfrak{h}/2$.
+%   % \begin{enumerate}%[label=\alph*)]
+%%      \item Let $\mathfrak{J}=\{j\in\{1,\cdots,k\}: n_{j}> (b-a)/\mathfrak{h}\}$. If $\mathfrak{J}$ is empty, go to Step 1.
+%%      \item Otherwise, recompute the upper bound on $\Var(f''')$ for all $n_{j}$, with $j \in \mathfrak{J}$ as follows:
+%%      \begin{align*}
+%%        &\text{For } j'=\min\mathfrak{J}, \text{ let } \eta_{j'}=\mathfrak{C}((b-a)/n_{j'})\widetilde{V}_3(f,n_{j'}), \\
+%%        &\text{Compute } \eta_{j}=\min\{\eta_{j-1},\mathfrak{C}((b-a)/n_{j})\widetilde{V}_3(f,n_{j})\}, \text{ for } j=j'+1, \cdots, k.
+%%      \end{align*}
+%%      Go to the beginning of Step 4.
+%Here is the enumerate
+%
+%%       \begin{align*}
+%%         For &j'=\min\{\mathfrak{J}\}$, $\eta_{n_{j'}}=\mathfrak{C}(2(b-a)/n_{j'})\widetilde{V}_1(f,n_{j'}),\\ &\eta_{j}=\min\{\eta_{j-1},\mathfrak{C}(2(b-a)/n_{j})\widetilde{V}_1(f,n_{j})\}$, $j=j'+1, \cdots, k. Then go to the beginning of Step 3.
+%%       \end{align*}
+%    %\end{enumerate}
+%
+%
+%\item[Step 5. Check for convergence.] Check whether $n_k$ is large enough to satisfy the error tolerance, i.e.
+%%    \begin{equation*}
+%%        \widetilde{V}_1(f,n_k) \le \frac{8\varepsilon n_k^2}{(b-a)^2\mathfrak{C}(2(b-a)/n_k)}.
+%%    \end{equation*}
+%    \begin{equation*}
+%          n_k^4 \ge \frac{\eta_{k}(b-a)^4}{93312\varepsilon}.
+%    \end{equation*}
+%Here is enumerate
+%%    \begin{enumerate}[label=\alph*)]
+%%      \item If true, return {\tt integral\_s}$(f,\varepsilon)=S_{n_k}(f)$ and terminate the algorithm.
+%%      \item Otherwise, go the Step 6.
+%%    \end{enumerate}
+%
+%
+%\item[Step 6. Increase the number of nodes and loop again.] Choose
+%$$
+%n_{k+1}=n_k\times\max\left(\left\lceil\frac{(b-a)}{n_{k}}\left(\frac{\widetilde{V}_3(f,n_k)}{93312\varepsilon}\right)^{1/4}\right\rceil,2\right).
+%$$
+%Go to Step 2.
+%\end{description}
+%\end{algo}
+%
+%The process of {\tt integral\_s} is similar to {\tt integral\_t}. Moreover, {\tt integral\_s} always succeeds if the integrand is in the cone $\cc^3$ and the number of nodes is large enough.
+%\begin{theorem}\label{thmSimpson}
+%    For integrands in $\cc^3$, {\tt integral\_s} is successful, i.e.,
+%    \begin{equation*}
+%      \left|\int_{a}^{b}f(x)dx-{\tt integral\_s}(f,\varepsilon)\right|\le\varepsilon, \qquad \forall f\in \cc^3.
+%    \end{equation*}
+%\end{theorem}
+%\begin{proof}
+% From Lemma \ref{lemmaerrorboundsim} and the description below it, {\tt integral\_s} is guaranteed to provide an approximation of integral \eqref{integral} with the approximation error less than the tolerance using the Simpson's rule.
+%\end{proof}
+%
+%
+%\subsection{Computational cost of {\tt integral\_s}}
+%Having created the multistage adaptive algorithm using the Simpson's rule, we now continue to find the computational cost of the algorithm. The computational cost of the Simpson's algorithm can be bounded by the following theorem.
+%\begin{theorem}\label{uppbndcostSimp}
+%    Let $N(f,\varepsilon)$ denote the final number of $n_k$ in Step 5 when {\tt integral\_s} terminates. Then this number is bounded below and above in terms of the true, yet unknown, $\Var(f''')$.
+%    \begin{multline}\label{uppbndcostineqsim}
+%        \max\left(\left\lfloor\frac{(b-a)}{\mathfrak{h}}\right\rfloor+1,\left\lceil(b-a)\left(\frac{\Var(f''')}{93312\varepsilon}\right)^{1/4}\right\rceil\right)\leq N(f,\varepsilon)\\ \leq 2\min\left\{n\in\mathbb{N}:n\geq\left\lfloor\frac{(b-a)}{\mathfrak{h}}\right\rfloor+1,\zeta(n)\Var(f''')\leq\varepsilon\right\}\\ \leq 2\min_{0<\alpha\leq1}\max\left(\left\lfloor\frac{(b-a)}{\alpha\mathfrak{h}}\right\rfloor+1,(b-a)\left(\frac{\mathfrak{C}(\alpha\mathfrak{h})\Var(f''')}{93312\varepsilon}\right)^{1/4}\right),
+%    \end{multline}
+%    where $\zeta(n)=(b-a)^4\mathfrak{C}((b-a)/n)/(93312n^4)$. The number of function values, namely the computational cost, required by the algorithm is $6N(f,\varepsilon)+1$.
+%\end{theorem}
+%
+%\begin{proof}
+%  %No matter what inputs $f$ and $\varepsilon$ are provided, the number of intervals must be at least $n_1=\lfloor2(b-a)/\mathfrak{h}\rfloor+1$ in order to comply with both Simpson's rule and divided differences method. Then the number of intervals increases until $\widetilde{\text{err}}(f,n)\le\varepsilon$, which by \eqref{errorboundcone} implies that $\overline{\text{err}}(f,n)\le\varepsilon$. This implies the lower bound on $N(f,\varepsilon)$.
+%  No matter what inputs $f$ and $\varepsilon$ are provided, $N(f,\varepsilon)\ge n_1=\lfloor (b-a)/\mathfrak{h}\rfloor+1$. Then the number of intervals increases until $\overline{\text{err}}(f,n)\le\varepsilon$. From the error bound defined in \eqref{errorbound}, $C(N(f,\varepsilon))\Var(f''')\leq \varepsilon$. Thus $N(f,\varepsilon)\geq \left\lceil(b-a)\left(\frac{\Var(f''')}{93312\varepsilon}\right)^{1/4}\right\rceil$. This implies the lower bound on $N(f,\varepsilon)$.
+%
+%  Let $K$ be the value of $k$ for which {\tt integral\_s} terminates. Since $n_1$ satisfies the upper bound, one may assume that $K \ge 2$. Let $m$ be the multiplication integer found in Step 6. Note that $\zeta((m-1)n_{K-1})\Var(f''')>\varepsilon$. For $m=2$, this is true because $\zeta(n_{K-1})\Var(f''')\ge\zeta(n_{K-1})\widetilde{V}_{3}(f,n_{K-1})>\varepsilon$. For $m>2$ it is true because of the definition of $m$. Since $\zeta$ is a decreasing function, it follows that
+%  $$(m-1)n_{K-1}<n^*:=\min\left\{n\in\mathbb{N}:n\ge\left\lfloor\frac{2(b-a)}{n}\right\rfloor+1,\zeta(n)\Var(f''')\le\varepsilon\right\}.$$
+%  Therefore $n_K=m^*n_{K-1}<m^*\frac{n^*}{m-1}=\frac{m}{m-1}n^*\le2n^*$.
+%
+%  To prove the latter part of the upper bound, we need to prove that
+%  $$n^*\leq\max\left(\left\lfloor\frac{2(b-a)}{\alpha\mathfrak{h}}\right\rfloor+1,(b-a)\left(\frac{\mathfrak{C}(\alpha\mathfrak{h})\Var(f''')}{93312\varepsilon}\right)^{1/4}\right),\quad 0<\alpha<1.$$
+%  For fixed $\alpha\in(0,1]$, we only need to consider that case where $n^*>\left\lfloor2(b-a)/(\alpha\mathfrak{h})\right\rfloor$. This implies that $n^*>\left\lfloor2(b-a)/(\alpha\mathfrak{h})\right\rfloor\ge 2(b-a)/(\alpha\mathfrak{h})$ thus $\alpha\mathfrak{h}\ge2(b-a)/(n^*)$. Also by the definition of $n^*$, $\zeta$, and $\mathfrak{C}$ is non-decreasing:
+%  \begin{align*}
+%    &\zeta(n^*)\Var(f''')>\varepsilon, \\
+%    \Rightarrow 1&<\left(\frac{\zeta(n^*)\Var(f''')}{\varepsilon}\right)^{1/4},\\
+%    \Rightarrow n^*&<n^*\left(\frac{\zeta(n^*)\Var(f''')}{\varepsilon}\right)^{1/4}\\
+%    &=n^*\left(\frac{(b-a)^4\mathfrak{C}(2(b-a)/(n^*))\Var(f''')}{93312(n^*)^4\varepsilon}\right)^{1/4}\\
+%    &\le(b-a)\left(\frac{\mathfrak{C}(\alpha\mathfrak{h})\Var(f''')}{93312\varepsilon}\right)^{1/4}.
+%  \end{align*}
+%  This completes the proof of latter part of the upper bound.
+%\end{proof}
+%
+%Having obtained the upper bound on the computational cost, it is important to discover a lower bound of complexity for univariate integration problems. By studying the lower bound on the complexity, one can decide whether the cost of our algorithms are optimal among all possible algorithms using function values for the same problem. In the next chapter, the complexity of the problem is discussed.
+%
+%\section{Experiment}
+%The bump function $\text{bump}(x;t,\delta)$ defined in \eqref{bumpfunction} is used as our test function to check the performance of our algorithms. Consider the family of bump test functions on interval $(0,1)$ defined by
+%\begin{equation}\label{testfun}
+%f(x,t,\delta)= \text{bump}(x;t,\delta)/\delta^{4}
+%\end{equation}
+%with  $t \sim \cu[0,1-4\delta]$, $\log_{10}(\delta) \sim \cu[-3,-1]$. The integration $\int_{0}^{1}f(x,t,\delta)\text{d}x=1$. Input $t$ controls the starting position of the bump. The starting point is randomly chosen between $0$ and $1-4\delta$. Input $\delta$ controls the quarter width of the bump. The random quarter width expands from $0.001$ to $0.1$.
+%%It follows that $\norm[1]{f'-f(1)+f(0)}=1/a$ and $\Var(f')=2/a^2$.  The probability that $f \in \cc_{\tau}$ is $\min\left(1,\max(0,\left(\log_{10}(\tau/2)-1\right)/3)\right).$
+%As an experiment, we chose $1000$ random test functions and applied {\tt integral\_t} and {\tt integral\_s} with an error tolerance of  $\varepsilon = 10^{-8}$. The initial values of $\mathfrak{h}$ are set as $0.1$, $0.01$, and $0.001$. Both algorithms impose a cost budget of $N_{\max}=10^7$. If either of the proposed $n_{k+1}$ in Step 1 or Step 6 of {\tt integral\_t} or {\tt integral\_s} exceeds $N_{\max}$, then the algorithms return with a warning and fall back to the largest possible $n_{k+1}$ which does not exceed $N_{\max}$ and is a multiple of $n_{k}$.  The algorithm is considered successful for a particular $f$ if the exact and approximate integrals have a difference no greater than $\varepsilon$. Our algorithms give warnings when the integrand is not in the original cone. Table \ref{integresultstable} shows the test results. The first column indicates different algorithms. The second column indicates the pre-determined cut-off values of {\tt integral\_t} and {\tt integral\_s}. Smaller cut-off value gives the algorithms larger number of starting points. The third column shows the total success rates of {\tt integral\_t}, {\tt integral\_s}, {\tt integral} and {\tt chebfun}. The fourth column shows the success rates of {\tt integral\_t} and {\tt integral\_s} when the integrand is out of the original cone. The fifth column shows the average number of data sites used for each integrand of {\tt integral\_t} and {\tt integral\_s} with different $\mathfrak{h}$. The last column shows the average time elapsed in seconds for each integrand of {\tt integral\_t}, {\tt integral\_s}, {\tt integral} and {\tt chebfun}.  %Our algorithm imposes a cost budget of $N_{\max}=10^7$.
+%%If the proposed $n_{i+1}$ in Stages 2 or 3 exceeds $N_{\max}$, then our algorithm returns a warning and falls back to the largest possible $n_{i+1}$ not exceeding $N_{\max}$ for which $n_{i+1}-1$ is a multiple of $n_i-1$.  The probability that $f$ initially lies in $\cc_{\tau}$ is the smaller number in the third column of Table \ref{integresultstable}, while the larger number is the empirical probability that $f$ eventually lies in $\cc_{\tau}$ after possible increases in $\tau$ made by Stage 2 of Algorithm \ref{multistageintegalgo}.  For this experiment Algorithm \ref{multistageintegalgo} was successful for all $f$ that finally lie inside $\cc_{\tau}$ and for which no attempt was made to exceed the cost budget.
+%
+%%\begin{table}[h]
+%%\centering
+%%\begin{tabular}{cccccc}
+%%&&&Success & Success & Failure \\
+%%& $\tau$ &  $\Prob(f \in \cc_{\tau}) $ & No Warning & Warning & No Warning \\
+%%\toprule
+%%&$10$ & $0\% \rightarrow  25\% $ & $25\%$ & $<1\%$ & $75\%$  \\
+%%Algorithm \ref{multistagetrapalgo}
+%% &$100$ & $23 \% \rightarrow 58\% $ & $56\%$ & $2\%$ & $42\%$ \\
+%%&$1000$ & $57\% \rightarrow 88\% $& $68\%$ & $20\%$ &$12\%$ \\
+%%\midrule
+%%{\tt quad} & & & 8\% & & $92\%$\\
+%%{\tt integral} & & & 19\% & & $81\%$\\
+%%{\tt chebfun} & & &29\% & & $71\%$\\
+%%\end{tabular}
+%%\caption{The probability of the test function lying in the cone for the original and eventual values of $\tau$ and the empirical success rate of Algorithm \ref{multistagetrapalgo} and Algorithm \ref{multistageintegalgosimpson} plus the success rates of other common quadrature algorithms. \label{integresultstable}}
+%%\end{table}
+%\begin{table}[ht]
+%\caption{The success rates, average costs and average time (sec) of {\tt integral\_t} and {\tt integral\_s} plus the success rates of other common quadrature algorithms.}
+%\centering
+%\begin{tabular}{cccccc}
+%\hline\hline
+%& $\mathfrak{h}$ & Success & Success Warning & Average Cost & Average Time \\
+%\hline
+%&$0.1$  & $33.60\%$ &  $13.60\%$  & $489605$ & $0.09729$\\
+%{\tt integral\_t}
+% &$0.01$  & $82.00\%$ & $3.60\%$ & $3110154$ & $0.6318$\\
+%&$0.001$ & $100.00\%$ &$0.00\%$ & $4942823$ & $0.9657$\\
+%\hline
+%&$0.1$  & $35.60\%$ &  $23.20\%$  & $3961$ & $0.001501$\\
+%{\tt integral\_s}
+% &$0.01$  & $86.20\%$ & $7.50\%$ & $56955$ & $0.01144$\\
+%&$0.001$ & $100.00\%$ &$0.00\%$ & $110109$ & $0.02145$\\
+%\hline
+%{\tt integral} &  & 41.70 \% & & &$0.0008824$\\
+%{\tt chebfun} &  &26.40\% & & &$0.01380$\\
+%\hline
+%\end{tabular}
+%\label{integresultstable}
+%\end{table}
+%
+%Some commonly available numerical algorithms in MATLAB are {\tt integral} (see \cite{MAT9.3}) and the MATLAB Chebfun toolbox (see \cite{TrefEtal12}). We applied these two routines to the family of random test functions as well. Their success and failure rates are also recorded in Table \ref{integresultstable}. They do not give warnings of possible failure.
+%
+%%\Section{Simpson's Rule}
+%%\textcolor{red}{I need to use a good example to run the tests. Then I will need to compare the results for both algorithms with other algorithms. After that, I need to compare trap and sim to get the conclusion such as sim has faster convergence rate than trap. This will require an sample function good to both trap and sim.}
+%The test results in Table \ref{integresultstable} shows that both {\tt integral\_t} and {\tt integral\_s} return higher success rates as the initial cut-off value $\mathfrak{h}$ decreasing. This makes sense because smaller cut-off value provides more inclusive cones. The chance of a bump function to lie in the cone is higher. In a other word, smaller cut-off value provides finer mesh, so that the chances of detecting narrow peaks are higher. For the same reason, for both {\tt integral\_t} and {\tt integral\_s}, the success rates with cone change warning decrease as $\mathfrak{h}$ becoming smaller. Since when the cut-off value is small, there is not as many out-of-cone integrands as if the cut-off value is large. Both {\tt integral\_t} and {\tt integral\_s} outperform {\tt integral} and Chebfun toolbox since the fact that the test functions are defined in order to fool the algorithms. Our algorithms perform better for spiky functions. Moreover, our algorithms has the mechanism of changing $\mathfrak{h}$ to enhance the success rate. The two comparing algorithms do not have similar settings.
+%
+%When $\mathfrak{h}$ is small, the average data sites used and the average time elapsed becomes larger for both {\tt integral\_t} and {\tt integral\_s},. It is because both algorithms start with more number of points. For each additional loop, the number of points required is more as well. Therefore they require longer computational time. If we compare the average cost and average time between {\tt integral\_t} and {\tt integral\_s}, the performance of the latter is significantly better than the former because the Simpson's rule has higher convergence rate than the trapezoidal rule. Comparing the computational time of both algorithms with {\tt integral} and {\tt chebfun}, out algorithms spend more time to solve the problem. Future works of improving the method are discussed in the next chapter.
+%
+%In this experiment, the smallest possible width of the peak is $0.004$. For both {\tt integral\_t} and {\tt integral\_s}, when the cut-off value is set to be $0.001$, the mesh is always fine enough to detect the peak. Thus the algorithms is guaranteed to succeed for all test functions. When the cut-off value is either $0.1$ or $0.01$, the algorithms may not detect all peaks. The results shown in Table \ref{integresultstable} support the theoretical results shown in the previous chapters that the algorithms are guaranteed to work for all the integrands in the cone.
+%
+%As mentioned before, any algorithm can be fooled by a spiky function if the peak is narrow enough. Another test is implemented with a family of test functions similar to the first one. In this case, the test functions on interval $(0.1)$ are defined by \eqref{testfun} with  $t \sim \cu[0,1-4\delta]$ and $\log_{10}(\delta) \sim \cu[-4,-1]$. A total number of 10000 random functions are tested with the same $N_{\max}$ and error tolerance. In this case, the smallest possible width of the peak is $0.0004$, which is not detectable even when $\mathfrak{h}$ is set to be $0.001$. Since the peaks are harder to detect in this case, the success rates for all four algorithms are lower than before in Table \ref{widerresultstable}.
+%
+%\begin{table}[ht]
+%\caption{Another test for {\tt integral\_t} and {\tt integral\_s} with narrower random peaks.}
+%\centering
+%\begin{tabular}{cccccc}
+%\hline\hline
+%& $\mathfrak{h}$ & Success & Success Warning & Average Cost & Average Time \\
+%\hline
+%&$0.1$  & $24.76\%$ &  $9.43\%$  & $397425$ & $0.0775$\\
+%{\tt integral\_t}
+% &$0.01$  & $57.36\%$ & $3.70\%$ & $2202134$ & $0.433$\\
+%&$0.001$ & $87.38\%$ &$0.81\%$ & $5156884$ & $0.967$\\
+%\hline
+%&$0.1$  & $25.94\%$ &  $14.28\%$  & $2759$ & $0.00117$\\
+%{\tt integral\_s}
+% &$0.01$  & $57.63\%$ & $4.45\%$ & $44458$ & $0.0445$\\
+%&$0.001$ & $94.09\%$ &$0.87\%$ & $583474$ & $0.583$\\
+%\hline
+%{\tt integral} &  & 29.68 \% & & &$0.0006990$\\
+%{\tt chebfun} &  &18.91\% & & &$0.009456$\\
+%\hline
+%\end{tabular}
+%\label{widerresultstable}
+%\end{table}
+%
+%Convergence rate for both algorithms are also important to study. We use the test function $f(x,t,\delta)= \text{bump}(x;t,\delta)/\delta^{4}$ where $t=0.2$; $\delta=0.1$. Both {\tt integral\_t} and {\tt integral\_s} use $\mathfrak{h}=0.1$. Figure \ref{fig:convergencerate} shows the convergence rate for the two algorithms.
+%%\begin{figure}[ht]
+%%\centering
+%%\includegraphics[width=12.5cm]{converwithslope.eps}
+%%\caption{The convergence curves for {\tt integral\_t} and {\tt integral\_s}. \label{fig:convergencerate}}
+%%\end{figure}
+%Here is picture
+%
+%From the picture we can see that {\tt integral\_s} converges faster than {\tt integral\_t}. Moreover, {\tt integral\_t} converges at the rate of $-1/2$ to the logarithm. And {\tt integral\_s} converges at the rate of $-1/4$ to the logarithm. The results support the results of the upper bound on the computational cost.
+
+
 
 \section{Future Work}
 Discussion Here
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \end{document}
