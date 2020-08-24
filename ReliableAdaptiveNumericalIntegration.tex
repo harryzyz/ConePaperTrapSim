@@ -234,9 +234,9 @@ adaptive \sep automatic \sep cones \sep  guarantee \sep integration \sep trapezo
 
 \section{Introduction}
 
-Integrations are the nuts and bolts when solving practical problems in a variety of areas. While some integration problems have analytical solutions and can be solved with pencil and paper, a vast majority of those problems must be solved numerically via algorithms. In practice, users want to expand the right amount of computational effort to achieve an answer meeting the error criterion, but not much more. This requirement calls the algorithms to be adaptive. The users also want the algorithm to be a black-box one which only requires the input function $f$ and the error tolerance, not anything else. This requirement calls the algorithm to have a stopping criterion based on data-driven error bounds, $\herr(f)$. 
+Integrations are the nuts and bolts when solving practical problems in a variety of areas. While some integration problems have analytical solutions and can be solved with pencil and paper, a vast majority of those problems must be solved numerically via algorithms. In practice, users want to expand the right amount of computational effort to achieve an answer meeting the error criterion, but not much more. This requirement calls the algorithms to be adaptive. The users also want the algorithm to be a black-box one which only requires the input function $f$ and the error tolerance, not anything else. This requirement calls the algorithm to have a stopping criterion based on data-driven error bounds, $\herr(f)$.
 
-Many numerical integration algorithms are adaptive such as ... Unfortunately, common adaptive algorithms are based on heuristic error bounds and not guaranteed. They sometimes fail, and fail for unknown reasons. in traditional error analysis, numerical algorithms follows rigorous error bounds, $\oerr(f)$. However, $\oerr(f)$ usually involves norms of the input function, $\norm[\calf]{f}$, which is typically unknown a priori. Therefore, traditional error bounds are insufficient to provide rigorous stopping criterions for numerical algorithms.
+Many numerical integration algorithms are adaptive such as ... Unfortunately, common adaptive algorithms are based on heuristic error bounds and not guaranteed. They sometimes fail, and fail for unknown reasons. In traditional error analysis, numerical algorithms follows rigorous error bounds, $\oerr(f)$. However, $\oerr(f)$ usually involves norms of the input function, $\norm[\calf]{f}$, which is typically unknown a priori. Therefore, traditional error bounds are insufficient to provide rigorous stopping criterions for numerical algorithms.
 
 Taking the trapezoidal rule as an example. Let the interval of the integral, $(a,b)$, equals to $(0,1)$. According to \cite[Sect.\ 7.2, (7.15)]{BraPet11a}:
 \begin{gather}
@@ -247,74 +247,102 @@ Taking the trapezoidal rule as an example. Let the interval of the integral, $(a
 \end{gather}
 where the total variation is defined as
 \begin{equation*}
-\Var(f') : = \sup \left \{\widehat{V}(f,\{x_i\}_{i=0}^n) := \sum_{i=2}^{n-1}  \abs{f(x_i) - f(x_{i-1})} \, \Big
-\vert \,
+\Var(f') : = \sup \left \{\widehat{V}(f,\{x_i\}_{i=0}^n) := \sum_{i=2}^{n-1}  \abs{f(x_i) - f(x_{i-1})} \, \Big \vert, \\
 \forall \text{ partitions }  \{x_i\}_{i=0}^n \text{ of } [a,b], \ \forall n \in \naturals \right \}.
 \end{equation*}
 A partition of an interval is an ordered subset including both endpoints. The user wants to determine how large $n$ should be in order to make  $\err_n(f)  \le \varepsilon$ for a prescribed
 absolute error tolerance $\varepsilon$. This condition is sufficient but requires an upper bound in terms of $\Var(f')$, which is normally unknown to the user.
 
+Numerical analysis texts  \cite[p.\ 223--224]{BurFai10}, \cite[p.\ 233]{CheKin12a},
+and  \cite[p.\ 270]{Sau12a} propose estimating the absolute error of $T_n(f)$ by
+\begin{equation} \label{tradtraperrest}
+ \err_n(f) \approx  \abs{\frac{T_n(f) - T_{n/2}(f)}{3}} =: \herr_n(f).
+\end{equation}
+This $\herr_n(f)$ uses only function values, not the value of the first derivatives. However, it is flawed. It fails for spiky integrands with spikes falling between the nodes. Moreover, it could fail for integrands that are not spiky but with $T_n(f)$ very closed to $T_{n/2}(f)$. James Lyness \cite[p.\ 69]{Lyn83} stated that these flaws exist for nearly all adaptive quadratures.
+
+Picture Compiling Error
+
+Although Lyness presents a pessimistic view of adaptive quadratures, we aim to provide a better alternative. We have developed adaptive algorithms that succeed for all reasonable integrands, albeit it may fail for spiky integrands\cite{HicEtal14a}. The key is a data-based upper bound on $\Var(f')$.
+
+Here we outline some key arguments.  Let
+$\size(\{t_i\}_{i=0}^n) : = \max_{1 \le i \le n} t_i - t_{i-1}$ denote the partition width.  By
+definition, $\Var(f')$ is bounded below by $\widehat{V}(f',\{t_i\}_{i=0}^n)$ for any partition.
+Reasonable integrands are defined as those functions for which an inflated lower bound on
+$\Var(f')$ provides an \emph{upper bound} on $\Var(f')$:
+\begin{multline} \label{conedef}
+\cc := \Bigl \{ f \in C^1[0,1]: \Var(f') \le \fC(\size(\{t_i\}_{i=0}^n)) \hV(f',\{t_i\}_{i=0}^n) \text{ for all }   n
+\in \naturals \\
+ \text{and partitions } \{t_i\}_{i=0}^n \text{ with }
+\size(\{t_i\}_{i=0}^n) < \hcut \Bigr \}, \qquad  \fC(h) := \frac{\fC_0 \hcut}{\hcut - h}, \quad \fC_0
+> 1, \
+\ 0 < \hcut < 1.
+\end{multline}
+This set of reasonable integrands, $\cc$, is a \emph{cone} since $f \in \cc \implies cf \in \cc$
+for any constant $c$.  The parameters $\hcut$ and $\fC_0$ determine how inclusive this cone of reasonable functions is.
+
+The idea of defining integrands in a cone instead of a ball is originally introduced in \cite{HicEtal14b}. In the original cone paper, a cone different from the cone in this paper is defined. Rigorous proof of guarantees and an automatic algorithm using the trapezoidal rule for univariate integration are provided based on this cone. Study of the upper bound on the computational cost and the lower bound on the complexity shows that the algorithm is asymptotically optimal. Unfortunately, the upper bound on the approximation error of Simpson's rule algorithm is too complicated to derive in this cone. Therefore, we introduce a new cone which is the one discussed in this paper in order to derive the Simpson's rule algorithm. The trapezoidal rule algorithm in a new cone is also studied. For the trapezoidal rule, theoretical results from the new cone show smaller upper bound on the computational cost and larger lower bound on the complexity than the ones from the old cone.
 
 
-%\section{Definitions}
-%\subsection{Problems and Algorithms} The function integration to be solved is defined by a solution operator
-%$$
-%S:\cf \to \cg = \int_{\cx} f(\vx) \, w(\vx) \, \dif \vx, \quad w \text{ is fixed,}
-%$$.
-%The space $\cf$ is a linear space of input functions defined on $\cx$ with semi-norm $|\cdot|_{\cf}$. The space $\cg$ is a linear space of outputs with norm $\|\cdot\|_{\cg}$.
-%The solution operator is assumed to be positively homogeneous, i.e.,
-%\[
-%S(cf) = cS(f) \qquad \forall c\ge 0.
-%\]
-%
-%Given a reasonable subset of input functions, $\cn \subseteq \cf$, an automatic algorithm $A:\cn\times(0,\infty) \to \cg$ takes as inputs a function, $f$, and an error tolerance, $\varepsilon$.  Our goal is to find an $A$ for which $\norm[\cg]{S(f)-A(f,\varepsilon)}\le \varepsilon$.  Algorithm \ref{nonadaptalgo} is one non-adaptive example that is successful for functions in balls, i.e., $\cn=\cb_{\sigma}$.
-%
-%Following \cite[Section 3.2]{TraWasWoz88}, the algorithm takes the form of some function of data derived from the input function:
-%\begin{equation*}
-%\label{algoform}
-%A(f,\varepsilon) =  \phi(\vL(f)), \quad \vL(f) = \left(L_1(f), \ldots, L_m(f)\right) \qquad \forall f \in \cf.
-%\end{equation*}
-%Here the $L_i \in \Lambda$ are real-valued homogeneous functions defined on $\cf$:
-%\begin{equation*}
-%\label{dataassump}
-%L(cf) = cL(f) \qquad \forall f \in \cf, \ c \in \reals, \ L \in \Lambda.
-%\end{equation*}
-%One popular choice for $\Lambda$ is the set of all function values, $\Lambda^{\std}$, i.e., $L_i(f) = f(\vx_i)$ for some $\vx_i \in \cx$.  Another common choice is the set of all bounded linear functionals, $\Lambda^{\lin}$.  In general, $m$ may depend on  $\varepsilon$ and the $L_i(f)$, and each $L_i$ may depend on $L_1(f), \ldots, L_{i-1}(f)$.  The set of all such algorithms is denoted by $\ca(\cn,\cg,S,\Lambda)$. For example, Algorithm \ref{nonadaptalgo} lies in $\ca(\cb_{\sigma},\cg,S,\Lambda)$.  In this article, all algorithms are assumed to be deterministic.  There is no randomness.
-%
-%\subsection{Costs of Algorithms} \label{AlgoCostsec}
-%
-%The cost of a possibly adaptive algorithm, $A$, depends on the function and the error tolerance:
-%\[
-%\cost(A,f,\varepsilon) = \$(\vL) = \$(L_1) + \cdots +\$(L_m) \in \natzero,
-%\]
-%where $\$:\Lambda \to \naturals$, and $\$(L)$ is the cost of acquiring the datum $L(f)$. The cost of $L$ may be the same for all $L \in \Lambda$, e.g, $\$(L)=1$.  Alternatively, the cost might vary with the choice of $L$.  For example, if $f$ is a function of the infinite sequence of real numbers, $(x_1, x_2, \ldots)$, the cost of evaluating the function with arbitrary values of the first $d$ coordinates, $L(f)=f(x_1, \ldots, x_d, 0, 0, \ldots)$, might be $d$.  This cost model has been used by for integration problems \cite{HicMGRitNiu09a,KuoEtal10a,NiuHic09a,NiuHic09b,PlaWas11a} and function approximation problems \cite{Was13a,WasWoz11a,WasWoz11b}.  If an algorithm does not require any function data, then its cost is zero.
-%
-%Although the cost of an adaptive algorithm varies with $f$, we hope that it does not vary wildly for different input functions with the same $\cf$-semi-norm. We define the \emph{maximum} and \emph{minimum} costs of the algorithm $A\in \ca(\cn,\cg,S,\Lambda)$ relative to $\cb_{s}$, the $\cf$-semi-norm ball, as follows:
-%\begin{gather*}
-%\maxcost(A,\cn,\varepsilon,\cb_s)
-%= \sup \{ \cost(A,f,\varepsilon) : f \in \cn \cap \cb_{s} \}, \\ \mincost(A,\cn,\varepsilon,\cb_s)
-%= \inf \biggl \{ \cost(A,f,\varepsilon) : f \in \cn\setminus \bigcup_{0 \le s'<s}\cb_{s'} \biggr \} .
-%\end{gather*}
-%Note that $A$ knows that $f \in \cn$, but $A$ does not know $\Fnorm{f}$ (unless $\inf_{f \in \cn} \Fnorm{f}=\sup_{f \in \cn} \Fnorm{f}$).  An algorithm is said to have \emph{$\cb_{s}$-stable computational cost} if
-%\begin{equation*}\label{coststabledef}
-%\sup_{\varepsilon, s > 0} \frac{\maxcost(A,\cn,\varepsilon,\cb_s)}{\max(1,\mincost(A,\cn,\varepsilon, \cb_s))} < \infty.
-%\end{equation*}
-%An analogous definition of the stability of computational cost can be made in terms of $\tcf$-semi-norm balls.
-%
-%The complexity of a problem is defined as the maximum cost of the cheapest algorithm that always satisfies the error tolerance:
-%\begin{multline*}
-%\comp(\varepsilon,\ca(\cn,\cg,S,\Lambda),\cb_s) \\
-% = \inf\left\{\maxcost(A,\cn,\varepsilon,\cb_s) : A \in \ca(\cn,\cg,S,\Lambda), \right. \\
-% \left . \norm[\cg]{S(f)-A(f,\varepsilon)} \le \varepsilon \ \ \forall f \in \cn, \ \varepsilon \ge 0 \right \} \in \natzero.
-%\end{multline*}
-%Here the infimum of an empty set is defined to be $\infty$.
-%
-%Algorithm $\text{ref nonadaptalgo}$ is defined for input functions lying in the ball $\cb_{\sigma}$.  It is not adaptive, and its cost depends only on $\varepsilon/\sigma$, but not on the particulars of $f$:
-%\begin{multline} \label{nonadaptalgocost}
-%\maxcost(A,\cb_{\sigma},\varepsilon,\cb_{s}) = \mincost(A,\cb_{\sigma},\varepsilon,\cb_{s}) \\
-%= \cost(A,f,\varepsilon) = h^{-1}(\varepsilon/\sigma) \qquad 0 < s \le \sigma.
-%\end{multline}
-%
+
+\section{Definitions}
+\subsection{Problems and Algorithms} The function integration to be solved is defined by a solution operator
+$$
+S:\cf \to \cg = \int_{\cx} f(\vx) \, w(\vx) \, \dif \vx, \quad w \text{ is fixed,}
+$$.
+The space $\cf$ is a linear space of input functions defined on $\cx$ with semi-norm $|\cdot|_{\cf}$. The space $\cg$ is a linear space of outputs with norm $\|\cdot\|_{\cg}$.
+The solution operator is assumed to be positively homogeneous, i.e.,
+\[
+S(cf) = cS(f) \qquad \forall c\ge 0.
+\]
+
+Given a reasonable subset of input functions, $\cn \subseteq \cf$, an automatic algorithm $A:\cn\times(0,\infty) \to \cg$ takes as inputs a function, $f$, and an error tolerance, $\varepsilon$.  Our goal is to find an $A$ for which $\norm[\cg]{S(f)-A(f,\varepsilon)}\le \varepsilon$.  Algorithm \ref{nonadaptalgo} is one non-adaptive example that is successful for functions in balls, i.e., $\cn=\cb_{\sigma}$.
+
+Following \cite[Section 3.2]{TraWasWoz88}, the algorithm takes the form of some function of data derived from the input function:
+\begin{equation*}
+\label{algoform}
+A(f,\varepsilon) =  \phi(\vL(f)), \quad \vL(f) = \left(L_1(f), \ldots, L_m(f)\right) \qquad \forall f \in \cf.
+\end{equation*}
+Here the $L_i \in \Lambda$ are real-valued homogeneous functions defined on $\cf$:
+\begin{equation*}
+\label{dataassump}
+L(cf) = cL(f) \qquad \forall f \in \cf, \ c \in \reals, \ L \in \Lambda.
+\end{equation*}
+One popular choice for $\Lambda$ is the set of all function values, $\Lambda^{\std}$, i.e., $L_i(f) = f(\vx_i)$ for some $\vx_i \in \cx$.  Another common choice is the set of all bounded linear functionals, $\Lambda^{\lin}$.  In general, $m$ may depend on  $\varepsilon$ and the $L_i(f)$, and each $L_i$ may depend on $L_1(f), \ldots, L_{i-1}(f)$.  The set of all such algorithms is denoted by $\ca(\cn,\cg,S,\Lambda)$. For example, Algorithm \ref{nonadaptalgo} lies in $\ca(\cb_{\sigma},\cg,S,\Lambda)$.  In this article, all algorithms are assumed to be deterministic.  There is no randomness.
+
+\subsection{Costs of Algorithms} \label{AlgoCostsec}
+
+The cost of a possibly adaptive algorithm, $A$, depends on the function and the error tolerance:
+\[
+\cost(A,f,\varepsilon) = \$(\vL) = \$(L_1) + \cdots +\$(L_m) \in \natzero,
+\]
+where $\$:\Lambda \to \naturals$, and $\$(L)$ is the cost of acquiring the datum $L(f)$. The cost of $L$ may be the same for all $L \in \Lambda$, e.g, $\$(L)=1$.  Alternatively, the cost might vary with the choice of $L$.  For example, if $f$ is a function of the infinite sequence of real numbers, $(x_1, x_2, \ldots)$, the cost of evaluating the function with arbitrary values of the first $d$ coordinates, $L(f)=f(x_1, \ldots, x_d, 0, 0, \ldots)$, might be $d$.  This cost model has been used by for integration problems \cite{HicMGRitNiu09a,KuoEtal10a,NiuHic09a,NiuHic09b,PlaWas11a} and function approximation problems \cite{Was13a,WasWoz11a,WasWoz11b}.  If an algorithm does not require any function data, then its cost is zero.
+
+Although the cost of an adaptive algorithm varies with $f$, we hope that it does not vary wildly for different input functions with the same $\cf$-semi-norm. We define the \emph{maximum} and \emph{minimum} costs of the algorithm $A\in \ca(\cn,\cg,S,\Lambda)$ relative to $\cb_{s}$, the $\cf$-semi-norm ball, as follows:
+\begin{gather*}
+\maxcost(A,\cn,\varepsilon,\cb_s)
+= \sup \{ \cost(A,f,\varepsilon) : f \in \cn \cap \cb_{s} \}, \\ \mincost(A,\cn,\varepsilon,\cb_s)
+= \inf \biggl \{ \cost(A,f,\varepsilon) : f \in \cn\setminus \bigcup_{0 \le s'<s}\cb_{s'} \biggr \} .
+\end{gather*}
+Note that $A$ knows that $f \in \cn$, but $A$ does not know $\Fnorm{f}$ (unless $\inf_{f \in \cn} \Fnorm{f}=\sup_{f \in \cn} \Fnorm{f}$).  An algorithm is said to have \emph{$\cb_{s}$-stable computational cost} if
+\begin{equation*}\label{coststabledef}
+\sup_{\varepsilon, s > 0} \frac{\maxcost(A,\cn,\varepsilon,\cb_s)}{\max(1,\mincost(A,\cn,\varepsilon, \cb_s))} < \infty.
+\end{equation*}
+An analogous definition of the stability of computational cost can be made in terms of $\tcf$-semi-norm balls.
+
+The complexity of a problem is defined as the maximum cost of the cheapest algorithm that always satisfies the error tolerance:
+\begin{multline*}
+\comp(\varepsilon,\ca(\cn,\cg,S,\Lambda),\cb_s) \\
+ = \inf\left\{\maxcost(A,\cn,\varepsilon,\cb_s) : A \in \ca(\cn,\cg,S,\Lambda), \right. \\
+ \left . \norm[\cg]{S(f)-A(f,\varepsilon)} \le \varepsilon \ \ \forall f \in \cn, \ \varepsilon \ge 0 \right \} \in \natzero.
+\end{multline*}
+Here the infimum of an empty set is defined to be $\infty$.
+
+Algorithm $\text{ref nonadaptalgo}$ is defined for input functions lying in the ball $\cb_{\sigma}$.  It is not adaptive, and its cost depends only on $\varepsilon/\sigma$, but not on the particulars of $f$:
+\begin{multline} \label{nonadaptalgocost}
+\maxcost(A,\cb_{\sigma},\varepsilon,\cb_{s}) = \mincost(A,\cb_{\sigma},\varepsilon,\cb_{s}) \\
+= \cost(A,f,\varepsilon) = h^{-1}(\varepsilon/\sigma) \qquad 0 < s \le \sigma.
+\end{multline}
+
 %
 %\section{Error Bounds}
 %In this chapter, we derive upper bounds on the approximation errors in terms of function values. By %\eqref{errorbound}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=latex 2020.2.14)  2 JUL 2020 19:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=latex 2020.2.14)  16 AUG 2020 11:04
 entering extended mode
 **./ReliableAdaptiveNumericalIntegration.tex
 (ReliableAdaptiveNumericalIntegration.tex
@@ -624,6 +624,11 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 233
 ("C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\umsb.fd"
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
+
+Package natbib Warning: Citation `BraPet11a' on page 1 undefined on input line 
+241.
+
+
 Overfull \hbox (2.22221pt too wide) has occurred while \output is active
 [] 
  []
@@ -631,15 +636,111 @@ Overfull \hbox (2.22221pt too wide) has occurred while \output is active
 [1
 
 
-] (ReliableAdaptiveNumericalIntegration.aux) ) 
-Here is how much of TeX's memory you used:
- 13969 strings out of 492484
- 265270 string characters out of 3130319
- 326416 words of memory out of 3000000
- 18052 multiletter control sequences out of 15000+200000
- 11131 words of font info for 42 fonts, out of 3000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 60i,6n,60p,437b,175s stack positions out of 5000i,500n,10000p,200000b,50000s
+]
+Overfull \hbox (76.49895pt too wide) detected at line 252
+[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 f[]\OT1/cmr/m/n/10 ) := [] [] \OML/cmm/m/it
+/10 :
+ []
 
-Output written on ReliableAdaptiveNumericalIntegration.dvi (1 page, 11108 bytes
-).
+
+Package natbib Warning: Citation `BurFai10' on page 2 undefined on input line 2
+56.
+
+
+Package natbib Warning: Citation `CheKin12a' on page 2 undefined on input line 
+256.
+
+
+Package natbib Warning: Citation `Sau12a' on page 2 undefined on input line 257
+.
+
+
+Package natbib Warning: Citation `Lyn83' on page 2 undefined on input line 261.
+
+
+
+Package natbib Warning: Citation `HicEtal14a' on page 2 undefined on input line
+ 265.
+
+LaTeX Font Info:    Trying to load font information for U+euf on input line 279
+.
+("C:\Program Files\MiKTeX 2.9\tex/latex/amsfonts\ueuf.fd"
+File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
+)
+Overfull \hbox (47.17024pt too wide) detected at line 279
+ []$[][]\OMS/cmsy/m/n/10 f\OML/cmm/m/it/10 t[]\OMS/cmsy/m/n/10 g[][] []\OT1/cmr
+/m/n/10 (\OMS/cmsy/m/n/10 f\OML/cmm/m/it/10 t[]\OMS/cmsy/m/n/10 g[]\OT1/cmr/m/n
+/10 ) \OML/cmm/m/it/10 < \U/euf/m/n/10 h[]\OML/cmm/m/it/10 ;  \U/euf/m/n/10 C\O
+T1/cmr/m/n/10 (\OML/cmm/m/it/10 h\OT1/cmr/m/n/10 ) := []\OML/cmm/m/it/10 ;  \U/
+euf/m/n/10 C[] \OML/cmm/m/it/10 > \OT1/cmr/m/n/10 1\OML/cmm/m/it/10 ;   \OT1/cm
+r/m/n/10 0 \OML/cmm/m/it/10 < \U/euf/m/n/10 h \OML/cmm/m/it/10 < \OT1/cmr/m/n/1
+0 1\OML/cmm/m/it/10 :$ []  
+ []
+
+
+Package natbib Warning: Citation `HicEtal14b' on page 2 undefined on input line
+ 283.
+
+[2]
+
+LaTeX Warning: Reference `nonadaptalgo' on page 3 undefined on input line 298.
+
+
+Package natbib Warning: Citation `TraWasWoz88' on page 3 undefined on input lin
+e 300.
+
+
+LaTeX Warning: Reference `nonadaptalgo' on page 3 undefined on input line 310.
+
+[3]
+
+Package natbib Warning: Citation `HicMGRitNiu09a' on page 4 undefined on input 
+line 318.
+
+
+Package natbib Warning: Citation `KuoEtal10a' on page 4 undefined on input line
+ 318.
+
+
+Package natbib Warning: Citation `NiuHic09a' on page 4 undefined on input line 
+318.
+
+
+Package natbib Warning: Citation `NiuHic09b' on page 4 undefined on input line 
+318.
+
+
+Package natbib Warning: Citation `PlaWas11a' on page 4 undefined on input line 
+318.
+
+
+Package natbib Warning: Citation `Was13a' on page 4 undefined on input line 318
+.
+
+
+Package natbib Warning: Citation `WasWoz11a' on page 4 undefined on input line 
+318.
+
+
+Package natbib Warning: Citation `WasWoz11b' on page 4 undefined on input line 
+318.
+
+
+Package natbib Warning: There were undefined citations.
+
+[4] (ReliableAdaptiveNumericalIntegration.aux)
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 14014 strings out of 492484
+ 265835 string characters out of 3130319
+ 333639 words of memory out of 3000000
+ 18082 multiletter control sequences out of 15000+200000
+ 14456 words of font info for 54 fonts, out of 3000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 60i,12n,60p,1742b,192s stack positions out of 5000i,500n,10000p,200000b,50000s
+
+Output written on ReliableAdaptiveNumericalIntegration.dvi (4 pages, 29020 byte
+s).
